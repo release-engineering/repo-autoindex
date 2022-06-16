@@ -1,0 +1,20 @@
+<html>
+{# A generic index page for any kind of content. #}
+    <head>
+        <title>{{ title }}</title>
+    </head>
+    <body>
+        <h1>{{ title }}</h1>
+        <div class="header">
+            {{ header|safe }}
+        </div>
+        <pre>
+{% for entry in index_entries %}
+{{ entry.icon }} <a href="{{ entry.href }}">{{ entry.text }}</a>{{ entry.padding }}   {{ entry.time }}   {{ entry.size }}
+{%- endfor %}
+        </pre>
+        <div class="footer">
+            {{ footer|safe }}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "repo-autoindex"
+version = "0.1.0"
+description = "Generic static HTML indexes of various repository types"
+authors = ["Rohan McGovern <rmcgover@redhat.com>"]
+license = "GPLv3"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.8.1"
+defusedxml = "^0.7.1"
+Jinja2 = "^3.1.2"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+"repo-autoindex" = "repo_autoindex.cmd:entrypoint"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

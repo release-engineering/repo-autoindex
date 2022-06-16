@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# visual studio code
+.vscode/
+
+# files likely to be generated if you're testing
+# the repo-autoindex command locally
+**/index.html
