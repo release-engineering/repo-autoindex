@@ -107,7 +107,7 @@ class YumRepo(Repo):
             # TODO: raise proper error
             assert timestamp_node
             time = datetime.datetime.utcfromtimestamp(
-                timestamp_node.toxml()
+                int(timestamp_node.toxml())
             ).isoformat()
 
         out.append(
