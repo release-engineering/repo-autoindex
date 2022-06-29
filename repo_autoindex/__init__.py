@@ -1,3 +1,4 @@
+from .api import autoindex
 from .base import Fetcher, GeneratedIndex
 
-from .api import autoindex
+__all__ = ["autoindex", "Fetcher", "GeneratedIndex"]

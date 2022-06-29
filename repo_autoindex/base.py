@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from typing import Optional, TypeVar, Type
-from collections.abc import Awaitable, Callable, AsyncGenerator
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from dataclasses import dataclass
+from typing import Optional, Type, TypeVar
 
 T = TypeVar("T")
 Fetcher = Callable[[str], Awaitable[Optional[str]]]
@@ -21,8 +21,8 @@ class GeneratedIndex:
 class IndexEntry:
     href: str
     text: str
-    time: str = "-"
-    size: str = "-"
+    time: str = ""
+    size: str = ""
     padding: str = ""
     icon: str = ICON_OTHER
 
@@ -46,7 +46,7 @@ class Repo(ABC):
         self.fetcher = fetcher
 
     @abstractmethod
-    async def render_index(
+    def render_index(
         self, index_href_suffix: str
     ) -> AsyncGenerator[GeneratedIndex, None]:
         pass

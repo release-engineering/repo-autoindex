@@ -1,19 +1,32 @@
+import datetime
 import logging
 import os
-import datetime
+from collections.abc import AsyncGenerator, Generator, Iterable
 from dataclasses import dataclass
-from typing import Type, Optional
-from collections.abc import Generator, AsyncGenerator, Iterable
-
-from defusedxml import pulldom
-from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, DOMEventStream
+from typing import Optional, Type
 from xml.dom.minidom import Element
+from xml.dom.pulldom import END_ELEMENT, START_ELEMENT, DOMEventStream
 
-from .base import Repo, Fetcher, GeneratedIndex, IndexEntry, ICON_PACKAGE, ICON_FOLDER
+from defusedxml import pulldom  # type: ignore
+
+from .base import ICON_FOLDER, ICON_PACKAGE, Fetcher, GeneratedIndex, IndexEntry, Repo
 from .template import TemplateContext
 from .tree import treeify
 
 LOG = logging.getLogger("autoindex")
+
+
+def get_tag(elem: Element, name: str) -> Element:
+    elems: list[Element] = elem.getElementsByTagName(name)  # type: ignore
+    return elems[0]
+
+
+def get_text_tag(elem: Element, name: str) -> str:
+    tagnode = get_tag(elem, name)
+    child = tagnode.firstChild
+    # TODO: raise proper error if missing
+    assert child
+    return str(child.toxml())
 
 
 @dataclass
@@ -25,10 +38,10 @@ class Package:
     @classmethod
     def from_element(cls, elem: Element) -> "Package":
         return cls(
-            href=elem.getElementsByTagName("location")[0].attributes["href"].value,
+            href=get_tag(elem, "location").attributes["href"].value,
             # TODO: tolerate some of these being absent or wrong.
-            time=elem.getElementsByTagName("time")[0].attributes["file"].value,
-            size=elem.getElementsByTagName("size")[0].attributes["package"].value,
+            time=get_tag(elem, "time").attributes["file"].value,
+            size=get_tag(elem, "size").attributes["package"].value,
         )
 
     @property
@@ -44,7 +57,7 @@ class Package:
 
 def pulldom_elements(
     xml_str: str, path_matcher, attr_matcher=lambda _: True
-) -> Generator[Element]:
+) -> Generator[Element, None, None]:
     stream = pulldom.parseString(xml_str)
     current_path = []
     for event, node in stream:
@@ -90,8 +103,11 @@ class YumRepo(Repo):
             )
         )
         if len(revision_nodes) == 1:
+            timestamp_node = revision_nodes[0].firstChild
+            # TODO: raise proper error
+            assert timestamp_node
             time = datetime.datetime.utcfromtimestamp(
-                float(revision_nodes[0].firstChild.toxml())
+                int(timestamp_node.toxml())
             ).isoformat()
 
         out.append(
@@ -99,7 +115,7 @@ class YumRepo(Repo):
                 href="repodata/repomd.xml",
                 text="repomd.xml",
                 time=time,
-                size=size,
+                size=str(size),
             )
         )
 
@@ -110,14 +126,14 @@ class YumRepo(Repo):
                 attr_matcher=lambda attrs: attrs.get("type"),
             )
         )
-        data_nodes.sort(key=lambda node: node.attributes["type"].value)
+        data_nodes.sort(key=lambda node: str(node.attributes["type"].value))
 
         for node in data_nodes:
-            href = node.getElementsByTagName("location")[0].attributes["href"].value
+            href = get_tag(node, "location").attributes["href"].value
             basename = os.path.basename(href)
-            timestamp = node.getElementsByTagName("timestamp")[0].firstChild.toxml()
+            timestamp = get_text_tag(node, "timestamp")
             time = datetime.datetime.utcfromtimestamp(float(timestamp)).isoformat()
-            size = int(node.getElementsByTagName("size")[0].firstChild.toxml())
+            size = int(get_text_tag(node, "size"))
 
             out.append(
                 IndexEntry(
@@ -143,11 +159,14 @@ class YumRepo(Repo):
         assert len(primary_nodes) == 1
         primary_node = primary_nodes[0]
 
-        location = primary_node.getElementsByTagName("location")[0]
+        location = get_tag(primary_node, "location")
         href = location.attributes["href"].value
 
         primary_url = "/".join([self.base_url, href])
         primary_xml = await self.fetcher(primary_url)
+
+        # TODO: raise proper error if missing
+        assert primary_xml
 
         return sorted(
             [p.index_entry for p in self.__packages_from_primary(primary_xml)],
@@ -174,7 +193,7 @@ class YumRepo(Repo):
         self,
         entries: Iterable[IndexEntry],
         index_href_suffix: str,
-    ) -> Generator[GeneratedIndex, None]:
+    ) -> Generator[GeneratedIndex, None, None]:
         ctx = TemplateContext()
         nodes = [treeify(entries, index_href_suffix=index_href_suffix)]
         while nodes:
@@ -196,7 +215,7 @@ class YumRepo(Repo):
 
         if repomd_xml is None:
             # not yum repo
-            return
+            return None
 
         # it is a yum repo
         return cls(url, repomd_xml, fetcher)

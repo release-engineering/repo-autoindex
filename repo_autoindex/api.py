@@ -1,6 +1,7 @@
-import logging
 import gzip
+import logging
 from collections.abc import AsyncGenerator
+from typing import Optional
 
 import aiohttp
 
@@ -35,7 +36,7 @@ def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
 async def autoindex(
     url: str,
     *,
-    fetcher: Fetcher = None,
+    fetcher: Optional[Fetcher] = None,
     index_href_suffix: str = "",
 ) -> AsyncGenerator[GeneratedIndex, None]:
     if fetcher is None:

@@ -1,6 +1,6 @@
+import os
 from collections.abc import Iterable
 from dataclasses import replace
-import os
 
 import jinja2
 
@@ -10,7 +10,7 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
 class TemplateContext:
-    def __init__(self):
+    def __init__(self) -> None:
         self.env = jinja2.Environment(
             autoescape=True, loader=jinja2.FileSystemLoader(TEMPLATE_DIR)
         )
