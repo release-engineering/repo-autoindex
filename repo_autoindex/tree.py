@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, replace
+from collections.abc import Iterable
 
 from .base import ICON_FOLDER, IndexEntry
 
@@ -11,7 +12,9 @@ class TreeNode:
 
 
 def treeify(
-    all_entries: list[IndexEntry], relative_dir: str = "", index_href_suffix: str = ""
+    all_entries: Iterable[IndexEntry],
+    relative_dir: str = "",
+    index_href_suffix: str = "",
 ) -> TreeNode:
     out = TreeNode(relative_dir=relative_dir)
 
@@ -24,7 +27,7 @@ def treeify(
             )
         )
 
-    entries_by_leading_dir = {}
+    entries_by_leading_dir: dict[str, list[IndexEntry]] = {}
     for entry in all_entries:
         subdir = entry.href.removeprefix(relative_dir + "/")
         components = subdir.split("/", 1)

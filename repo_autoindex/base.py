@@ -46,7 +46,7 @@ class Repo(ABC):
         self.fetcher = fetcher
 
     @abstractmethod
-    async def render_index(
+    def render_index(
         self, index_href_suffix: str
     ) -> AsyncGenerator[GeneratedIndex, None]:
         pass

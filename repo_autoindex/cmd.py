@@ -3,14 +3,13 @@ import asyncio
 import gzip
 import logging
 import os
-from collections.abc import AsyncGenerator
 
 from repo_autoindex import autoindex
 
 LOG = logging.getLogger("autoindex")
 
 
-async def dump_autoindices(args):
+async def dump_autoindices(args: argparse.Namespace) -> None:
     index_filename = args.index_filename
     async for index in autoindex(args.url, index_href_suffix=index_filename):
         os.makedirs(index.relative_dir or ".", exist_ok=True)
