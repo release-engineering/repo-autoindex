@@ -21,8 +21,8 @@ class GeneratedIndex:
 class IndexEntry:
     href: str
     text: str
-    time: str = "-"
-    size: str = "-"
+    time: str = ""
+    size: str = ""
     padding: str = ""
     icon: str = ICON_OTHER
 
