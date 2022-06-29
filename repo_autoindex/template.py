@@ -1,6 +1,6 @@
+import os
 from collections.abc import Iterable
 from dataclasses import replace
-import os
 
 import jinja2
 

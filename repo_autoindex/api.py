@@ -1,5 +1,5 @@
-import logging
 import gzip
+import logging
 from collections.abc import AsyncGenerator
 
 import aiohttp

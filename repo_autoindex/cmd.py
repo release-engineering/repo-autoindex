@@ -1,9 +1,9 @@
-from collections.abc import AsyncGenerator
-import logging
+import argparse
 import asyncio
 import gzip
+import logging
 import os
-import argparse
+from collections.abc import AsyncGenerator
 
 from repo_autoindex import autoindex
 

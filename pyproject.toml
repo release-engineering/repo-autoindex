@@ -6,15 +6,19 @@ authors = ["Rohan McGovern <rmcgover@redhat.com>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-aiohttp = "^3.8.1"
-defusedxml = "^0.7.1"
-Jinja2 = "^3.1.2"
+python = ">=3.9,<4"
+aiohttp = ">=3.8.1"
+defusedxml = ">=0.7.1"
+Jinja2 = ">=3.1.2"
 
 [tool.poetry.dev-dependencies]
+pytest = ">=7.1.2"
 
 [tool.poetry.scripts]
 "repo-autoindex" = "repo_autoindex.cmd:entrypoint"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,15 +1,16 @@
+import datetime
 import logging
 import os
-import datetime
+from collections.abc import AsyncGenerator, Generator, Iterable
 from dataclasses import dataclass
-from typing import Type, Optional
-from collections.abc import Generator, AsyncGenerator, Iterable
+from typing import Optional, Type
+from xml.dom.minidom import Element
+from xml.dom.pulldom import END_ELEMENT, START_ELEMENT, DOMEventStream
 
 from defusedxml import pulldom
-from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, DOMEventStream
-from xml.dom.minidom import Element
 
-from .base import Repo, Fetcher, GeneratedIndex, IndexEntry, ICON_PACKAGE, ICON_FOLDER
+from .base import (ICON_FOLDER, ICON_PACKAGE, Fetcher, GeneratedIndex,
+                   IndexEntry, Repo)
 from .template import TemplateContext
 from .tree import treeify
 

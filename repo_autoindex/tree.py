@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, replace
 
-from .base import IndexEntry, ICON_FOLDER
+from .base import ICON_FOLDER, IndexEntry
 
 
 @dataclass
