@@ -26,13 +26,6 @@ class IndexEntry:
     padding: str = ""
     icon: str = ICON_OTHER
 
-    @property
-    def href_leading_dir(self) -> str:
-        components = self.href.split("/", 1)
-        if len(components) == 1:
-            return ""
-        return components[0]
-
 
 class Repo(ABC):
     def __init__(
@@ -49,7 +42,7 @@ class Repo(ABC):
     def render_index(
         self, index_href_suffix: str
     ) -> AsyncGenerator[GeneratedIndex, None]:
-        pass
+        pass  # pragma: no cover
 
     @classmethod
     @abstractmethod
@@ -58,4 +51,4 @@ class Repo(ABC):
 
         If so, returns an initialized Repo of a concrete subtype. If not, returns None.
         """
-        pass
+        pass  # pragma: no cover
