@@ -10,12 +10,11 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
 class TemplateContext:
-    def __init__(self) -> None:
+    def __init__(self, max_text_length: int = 800) -> None:
         self.env = jinja2.Environment(
             autoescape=True, loader=jinja2.FileSystemLoader(TEMPLATE_DIR)
         )
-        # low number is for testing - increase it later
-        self.max_text_length = 200
+        self.max_text_length = max_text_length
 
     def render_index(
         self,
@@ -39,8 +38,9 @@ class TemplateContext:
 
         out = []
         for entry in entries:
-            if len(entry.text) >= (self.max_text_length - 3):
-                entry = replace(entry, text=entry.text[:-3] + "...")
+            if len(entry.text) > self.max_text_length:
+                text = entry.text[: self.max_text_length - 3] + "..."
+                entry = replace(entry, text=text)
 
             # pad right so they all have the same length
             padcount = max_len - len(entry.text)
