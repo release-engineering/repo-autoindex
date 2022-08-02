@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import gzip
 import logging
 import os
 
@@ -19,7 +18,7 @@ async def dump_autoindices(args: argparse.Namespace) -> None:
         LOG.info("Wrote %s", output)
 
 
-def entrypoint():
+def entrypoint() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("url")
     parser.add_argument("--index-filename", default="index.html")
