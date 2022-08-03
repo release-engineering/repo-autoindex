@@ -28,7 +28,7 @@ async def test_command(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path):
     app.add_routes([web.static("/", THIS_DIR)])
 
     async with test_utils.TestServer(app) as server:
-        repo_url = server.make_url("/sample_repo")
+        repo_url = server.make_url("/sample_repo///")
         monkeypatch.setattr("sys.argv", ["repo-autoindex", str(repo_url)])
 
         entrypoint()
