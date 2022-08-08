@@ -1,5 +1,7 @@
 import pathlib
 import asyncio
+import logging
+from collections.abc import Callable, Awaitable
 
 import pytest
 
@@ -11,30 +13,44 @@ from repo_autoindex._impl.cmd import entrypoint
 THIS_DIR = pathlib.Path(__file__).parent
 
 
-async def test_command(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path):
-    """Run the repo-autoindex command against a sample repo and check the generated index."""
+class CommandTester:
+    def __init__(self, monkeypatch: pytest.MonkeyPatch):
+        self.monkeypatch = monkeypatch
 
+    async def __call__(self, url: str):
+        entrypoint_coro = []
+
+        def fake_run(coro):
+            assert asyncio.iscoroutine(coro)
+            entrypoint_coro.append(coro)
+
+        self.monkeypatch.setattr("asyncio.run", fake_run)
+
+        app = web.Application()
+        app.add_routes([web.static("/", THIS_DIR)])
+
+        async with test_utils.TestServer(app) as server:
+            repo_url = server.make_url(url + "//")
+            self.monkeypatch.setattr("sys.argv", ["repo-autoindex", str(repo_url)])
+
+            entrypoint()
+
+            assert entrypoint_coro
+            await entrypoint_coro[0]
+
+
+@pytest.fixture
+def tester(monkeypatch: pytest.MonkeyPatch) -> CommandTester:
+    return CommandTester(monkeypatch)
+
+
+async def test_command_yum(
+    monkeypatch: pytest.MonkeyPatch, tester: CommandTester, tmp_path: pathlib.Path
+):
+    """Run the repo-autoindex command against a sample yum repo and check the generated index."""
     monkeypatch.chdir(tmp_path)
 
-    entrypoint_coro = []
-
-    def fake_run(coro):
-        assert asyncio.iscoroutine(coro)
-        entrypoint_coro.append(coro)
-
-    monkeypatch.setattr("asyncio.run", fake_run)
-
-    app = web.Application()
-    app.add_routes([web.static("/", THIS_DIR)])
-
-    async with test_utils.TestServer(app) as server:
-        repo_url = server.make_url("/sample_repo///")
-        monkeypatch.setattr("sys.argv", ["repo-autoindex", str(repo_url)])
-
-        entrypoint()
-
-        assert entrypoint_coro
-        await entrypoint_coro[0]
+    await tester("/sample_repo")
 
     # It should have written index files reproducing the structure
     index_toplevel = tmp_path.joinpath("index.html")
@@ -56,3 +72,43 @@ async def test_command(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path):
     assert '<a href="w/index.html">w/</a>' in pkgs
 
     assert '<a href="walrus-5.21-1.noarch.rpm">walrus-5.21-1.noarch.rpm</a>' in w
+
+
+async def test_command_pulp(
+    monkeypatch: pytest.MonkeyPatch, tester: CommandTester, tmp_path: pathlib.Path
+):
+    """Run the repo-autoindex command against a sample pulp file repo and check the generated index."""
+    monkeypatch.chdir(tmp_path)
+
+    await tester("/sample_pulp_repo")
+
+    # It should have written an index file
+    index_toplevel = tmp_path.joinpath("index.html")
+    assert index_toplevel.exists()
+
+    # Simple sanity check of some expected content
+    toplevel = index_toplevel.read_text()
+
+    assert '<a href="file2.qcow2">file2.qcow2</a>' in toplevel
+
+
+async def test_command_no_content(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    tester: CommandTester,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Run the repo-autoindex command against an empty repo and verify nothing is written."""
+
+    caplog.set_level(logging.INFO)
+
+    monkeypatch.chdir(tmp_path)
+
+    await tester("/some-nonexistent-dir")
+
+    # It should not have written any index.html
+    index_toplevel = tmp_path.joinpath("index.html")
+    assert not index_toplevel.exists()
+
+    # It should have mentioned that there was no content
+    assert "No indexable content found" in caplog.text

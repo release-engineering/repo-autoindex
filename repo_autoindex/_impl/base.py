@@ -10,6 +10,8 @@ Fetcher = Callable[[str], Awaitable[Optional[str]]]
 
 ICON_FOLDER = "📂"
 ICON_PACKAGE = "📦"
+ICON_OPTICAL = "📀"
+ICON_QCOW = "🐮"
 ICON_OTHER = "  "
 
 

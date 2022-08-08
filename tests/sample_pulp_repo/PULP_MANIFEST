@@ -1,0 +1,5 @@
+file1.iso,abc123,100
+file2.qcow2,abc123,200
+oops, this line ain't so valid
+
+file3,abc234,300

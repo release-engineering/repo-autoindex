@@ -1,21 +1,28 @@
 import gzip
 import logging
 from collections.abc import AsyncGenerator
-from typing import Optional
+from typing import Optional, Type
 
 import aiohttp
 
-from .base import Fetcher, GeneratedIndex
+from .base import Fetcher, GeneratedIndex, Repo
 from .yum import YumRepo
+from .pulp import PulpFileRepo
 
 LOG = logging.getLogger("repo-autoindex")
-REPO_TYPES = [YumRepo]
+REPO_TYPES: list[Type[Repo]] = [YumRepo, PulpFileRepo]
 
 
 def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
-    async def get_content_with_session(url: str) -> str:
+    async def get_content_with_session(url: str) -> Optional[str]:
         LOG.info("Fetching: %s", url)
         async with session.get(url) as resp:
+            if resp.status == 404:
+                # This error status means we successfully determined that
+                # no content exists
+                return None
+
+            # Any other error status is fatal
             resp.raise_for_status()
 
             # Deal with the non-ideal content negotiation

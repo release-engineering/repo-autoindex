@@ -1,6 +1,5 @@
 from typing import Optional
 import textwrap
-import pytest
 
 from repo_autoindex import autoindex
 from repo_autoindex._impl.base import GeneratedIndex
@@ -395,7 +394,7 @@ class StaticFetcher:
         self.content: dict[str, str] = {}
 
     async def __call__(self, url: str) -> Optional[str]:
-        return self.content[url]
+        return self.content.get(url)
 
 
 async def test_typical_index():

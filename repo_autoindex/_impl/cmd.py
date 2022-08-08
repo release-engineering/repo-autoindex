@@ -11,12 +11,17 @@ LOG = logging.getLogger("repo-autoindex")
 
 async def dump_autoindices(args: argparse.Namespace) -> None:
     index_filename = args.index_filename
+    wrote_any = False
     async for index in autoindex(args.url, index_href_suffix=index_filename):
         os.makedirs(index.relative_dir or ".", exist_ok=True)
         output = os.path.join(index.relative_dir or ".", index_filename)
         with open(output, "w") as f:
             f.write(index.content)
         LOG.info("Wrote %s", output)
+        wrote_any = True
+
+    if not wrote_any:
+        LOG.info("No indexable content found at %s", args.url)
 
 
 def argparser() -> argparse.ArgumentParser:
