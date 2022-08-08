@@ -3,30 +3,35 @@ import logging
 import os
 from collections.abc import AsyncGenerator, Generator, Iterable
 from dataclasses import dataclass
-from typing import Optional, Type
+from typing import Optional, Type, Any, TypeVar, NoReturn, overload
 from xml.dom.minidom import Element
-from xml.dom.pulldom import END_ELEMENT, START_ELEMENT, DOMEventStream
+from xml.dom.pulldom import END_ELEMENT, START_ELEMENT
 
 from defusedxml import pulldom  # type: ignore
 
-from .base import ICON_FOLDER, ICON_PACKAGE, Fetcher, GeneratedIndex, IndexEntry, Repo
+from .base import ICON_PACKAGE, Fetcher, GeneratedIndex, IndexEntry, Repo, ContentError
 from .template import TemplateContext
 from .tree import treeify
 
 LOG = logging.getLogger("autoindex")
 
 
+def assert_repodata_ok(condition: Any, msg: str):
+    if not condition:
+        raise ContentError(msg)
+
+
 def get_tag(elem: Element, name: str) -> Element:
     elems: list[Element] = elem.getElementsByTagName(name)  # type: ignore
+    assert_repodata_ok(len(elems) == 1, f"expected exactly one {name} tag")
     return elems[0]
 
 
 def get_text_tag(elem: Element, name: str) -> str:
     tagnode = get_tag(elem, name)
     child = tagnode.firstChild
-    # TODO: raise proper error if missing
-    assert child
-    return str(child.toxml())
+    assert_repodata_ok(child, f"missing text {name} tag")
+    return str(child.toxml())  # type: ignore
 
 
 @dataclass
@@ -39,7 +44,6 @@ class Package:
     def from_element(cls, elem: Element) -> "Package":
         return cls(
             href=get_tag(elem, "location").attributes["href"].value,
-            # TODO: tolerate some of these being absent or wrong.
             time=get_tag(elem, "time").attributes["file"].value,
             size=get_tag(elem, "size").attributes["package"].value,
         )
@@ -104,10 +108,9 @@ class YumRepo(Repo):
         )
         if len(revision_nodes) == 1:
             timestamp_node = revision_nodes[0].firstChild
-            # TODO: raise proper error
-            assert timestamp_node
+            assert_repodata_ok(timestamp_node, "missing timestamp node")
             time = datetime.datetime.utcfromtimestamp(
-                int(timestamp_node.toxml())
+                int(timestamp_node.toxml())  # type: ignore
             ).isoformat()
 
         out.append(
@@ -165,11 +168,10 @@ class YumRepo(Repo):
         primary_url = "/".join([self.base_url, href])
         primary_xml = await self.fetcher(primary_url)
 
-        # TODO: raise proper error if missing
-        assert primary_xml
+        assert_repodata_ok(primary_xml, f"missing primary XML at {primary_url}")
 
         return sorted(
-            [p.index_entry for p in self.__packages_from_primary(primary_xml)],
+            [p.index_entry for p in self.__packages_from_primary(primary_xml)],  # type: ignore
             key=lambda e: e.text,
         )
 

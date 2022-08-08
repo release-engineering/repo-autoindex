@@ -1,4 +1,7 @@
 from ._impl.api import autoindex
-from ._impl.base import Fetcher, GeneratedIndex
+from ._impl.base import Fetcher, GeneratedIndex, ContentError
 
-__all__ = ["autoindex", "Fetcher", "GeneratedIndex"]
+ContentError.__module__ = "repo_autoindex"
+
+
+__all__ = ["autoindex", "ContentError", "Fetcher", "GeneratedIndex"]

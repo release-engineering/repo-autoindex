@@ -5,7 +5,7 @@ from typing import Optional, Type
 
 import aiohttp
 
-from .base import Fetcher, GeneratedIndex, Repo
+from .base import Fetcher, GeneratedIndex, Repo, ContentError, FetcherError
 from .yum import YumRepo
 from .pulp import PulpFileRepo
 
@@ -38,6 +38,17 @@ def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
             return await resp.text()
 
     return get_content_with_session
+
+
+def with_error_handling(fetcher: Fetcher) -> Fetcher:
+    # wraps a fetcher such that any raised exceptions are wrapped into FetcherError
+    async def new_fetcher(url: str) -> Optional[str]:
+        try:
+            return await fetcher(url)
+        except Exception as exc:
+            raise FetcherError from exc
+
+    return new_fetcher
 
 
 async def autoindex(
@@ -91,6 +102,15 @@ async def autoindex(
 
         Zero indexes may be produced if the given URL doesn't represent a repository
         of any supported type.
+
+    Raises:
+        :class:`ContentError`
+            Raised if indexed content appears to be invalid (for example, a yum repository
+            has invalid repodata).
+
+        :class:`Exception`
+            Any exception raised by ``fetcher`` will propagate (for example, I/O errors or
+            HTTP request failures).
     """
     if fetcher is None:
         async with aiohttp.ClientSession() as session:
@@ -103,8 +123,23 @@ async def autoindex(
     while url.endswith("/"):
         url = url[:-1]
 
-    for repo_type in REPO_TYPES:
-        repo = await repo_type.probe(fetcher, url)
-        if repo:
-            async for page in repo.render_index(index_href_suffix=index_href_suffix):
-                yield page
+    fetcher = with_error_handling(fetcher)
+
+    try:
+        for repo_type in REPO_TYPES:
+            repo = await repo_type.probe(fetcher, url)
+            if repo:
+                async for page in repo.render_index(
+                    index_href_suffix=index_href_suffix
+                ):
+                    yield page
+    except FetcherError as exc:
+        # FetcherErrors are unwrapped to propagate whatever was the original error
+        assert exc.__cause__
+        raise exc.__cause__ from None
+    except ContentError:
+        # explicitly raised ContentErrors are allowed to propagate
+        raise
+    except Exception as exc:
+        # Any other errors are treated as a ContentError
+        raise ContentError(f"Invalid content found at {url}") from exc
