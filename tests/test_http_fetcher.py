@@ -16,6 +16,7 @@ class FakeResponse:
     def __init__(self, body: bytes, content_type: str):
         self.body = body
         self.content_type = content_type
+        self.status = 200
 
     async def __aenter__(self):
         return self

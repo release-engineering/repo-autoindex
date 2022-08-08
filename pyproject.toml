@@ -16,6 +16,8 @@ pytest = ">=7.1.2"
 mypy = ">=0.961"
 pytest-asyncio = ">=0.18.3"
 pytest-cov = ">=3.0.0"
+Sphinx = "^5.1.1"
+sphinx-argparse = "^0.3.1"
 
 [tool.poetry.scripts]
 "repo-autoindex" = "repo_autoindex._impl.cmd:entrypoint"
