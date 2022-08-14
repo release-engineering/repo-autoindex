@@ -4,6 +4,10 @@ version = "0.2.0"
 description = "Generic static HTML indexes of various repository types"
 authors = ["Rohan McGovern <rmcgover@redhat.com>"]
 license = "GPLv3"
+readme = "README.md"
+homepage = "https://github.com/release-engineering/repo-autoindex"
+repository = "https://github.com/release-engineering/repo-autoindex"
+
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
