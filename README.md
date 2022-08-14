@@ -22,6 +22,16 @@ xdg-open index.html
 See [the manual](https://release-engineering.github.io/repo-autoindex/) for more
 information about the usage of `repo-autoindex`.
 
+## Changelog
+
+### v1.0.1 - 2022-08-15
+
+- Use correct SPDX license identifier in package metadata.
+
+### v1.0.0 - 2022-08-15
+
+- Initial stable release.
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

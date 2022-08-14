@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "repo-autoindex"
-version = "1.0.0"
+version = "1.0.1"
 description = "Generic static HTML indexes of various repository types"
 authors = ["Rohan McGovern <rmcgover@redhat.com>"]
-license = "GPLv3"
+license = "GPL-3.0-or-later"
 readme = "README.md"
 homepage = "https://github.com/release-engineering/repo-autoindex"
 repository = "https://github.com/release-engineering/repo-autoindex"
