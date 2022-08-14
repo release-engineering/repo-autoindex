@@ -9,7 +9,7 @@
 project = "repo-autoindex"
 copyright = "2022, Red Hat"
 author = "Rohan McGovern <rmcgover@redhat.com>"
-release = "0.1.0"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
