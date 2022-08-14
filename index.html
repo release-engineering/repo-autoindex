@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>repo-autoindex &#8212; repo-autoindex 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="repo-autoindex">
+<h1>repo-autoindex<a class="headerlink" href="#repo-autoindex" title="Permalink to this heading">¶</a></h1>
+<p>Minimal generator for HTML indexes of content repositories.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id1">Overview</a></p></li>
+<li><p><a class="reference internal" href="#reference-cli" id="id2">Reference: CLI</a></p></li>
+<li><p><a class="reference internal" href="#module-repo_autoindex" id="id3">Reference: API</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">repo-autoindex</span></code> is a minimal Python library and CLI for generating
+static HTML indexes for content repositories of various types.
+It supports:</p>
+<ul class="simple">
+<li><p>yum repositories (<code class="docutils literal notranslate"><span class="pre">repodata/repomd.xml</span></code>)</p></li>
+<li><p>pulp file repositories (<code class="docutils literal notranslate"><span class="pre">PULP_MANIFEST</span></code>)</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">repo-autoindex</span></code> provides similar functionality to traditional server-generated
+directory indexes such as httpd’s
+<a class="reference external" href="https://httpd.apache.org/docs/2.4/mod/mod_autoindex.html">mod_autoindex</a>, with
+a few key differences:</p>
+<ul class="simple">
+<li><p>The generated indexes are intentionally limited to show only the content present
+in repository metadata, rather than all content within a directory.</p></li>
+<li><p>The method of obtaining the content for indexing can be customized, allowing the
+library to integrate with exotic scenarios such as repositories generated on demand
+or not stored within a traditional filesystem.</p></li>
+</ul>
+</section>
+<section id="reference-cli">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Reference: CLI</a><a class="headerlink" href="#reference-cli" title="Permalink to this heading">¶</a></h2>
+<p><p>Generate indexes for a repository accessed via HTTP(S)</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">repo</span><span class="o">-</span><span class="n">autoindex</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">index</span><span class="o">-</span><span class="n">filename</span> <span class="n">FILENAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">debug</span><span class="p">]</span> <span class="n">url</span>
+</pre></div>
+</div>
+<section id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>url</kbd></dt>
+<dd><p>Base URL of repository to be indexed</p>
+</dd>
+</dl>
+</section>
+<section id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--index-filename</kbd></dt>
+<dd><p>Basename of output file(s)</p>
+<p>Default: “index.html”</p>
+</dd>
+<dt><kbd>--debug</kbd></dt>
+<dd><p>Enable verbose logging</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h3>
+<p>In the following example we generate indexes for a single Fedora
+yum repository. Note that the command generates multiple HTML files,
+reproducing the directory structure found in the repo.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>REPO_URL=$(curl -s &#39;https://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f36&amp;arch=x86_64&#39; | egrep &#39;^http&#39; | head -n1)
+repo-autoindex $REPO_URL
+Fetching: https://fedora.mirror.digitalpacific.com.au/linux/updates/36/Everything/x86_64/repodata/repomd.xml
+Fetching: https://fedora.mirror.digitalpacific.com.au/linux/updates/36/Everything/x86_64/repodata/32cf6191e4ef86045c9f34589d98f6378069359746b50def80a66e15fe5a906f-primary.xml.gz
+Wrote ./index.html
+Wrote repodata/index.html
+Wrote Packages/index.html
+Wrote Packages/z/index.html
+Wrote Packages/y/index.html
+Wrote Packages/x/index.html
+Wrote Packages/w/index.html
+Wrote Packages/v/index.html
+Wrote Packages/u/index.html
+Wrote Packages/t/index.html
+Wrote Packages/s/index.html
+Wrote Packages/r/index.html
+Wrote Packages/q/index.html
+Wrote Packages/p/index.html
+Wrote Packages/o/index.html
+Wrote Packages/n/index.html
+Wrote Packages/m/index.html
+Wrote Packages/l/index.html
+Wrote Packages/k/index.html
+Wrote Packages/j/index.html
+Wrote Packages/i/index.html
+Wrote Packages/h/index.html
+Wrote Packages/g/index.html
+Wrote Packages/f/index.html
+Wrote Packages/e/index.html
+Wrote Packages/d/index.html
+Wrote Packages/c/index.html
+Wrote Packages/b/index.html
+Wrote Packages/a/index.html
+Wrote Packages/3/index.html
+</pre></div>
+</div>
+</section>
+</section>
+<section id="module-repo_autoindex">
+<span id="reference-api"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Reference: API</a><a class="headerlink" href="#module-repo_autoindex" title="Permalink to this heading">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="repo_autoindex.ContentError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">repo_autoindex.</span></span><span class="sig-name descname"><span class="pre">ContentError</span></span><a class="headerlink" href="#repo_autoindex.ContentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error raised when indexed content appears to be invalid.</p>
+<p>Errors of this type are raised when repo-autoindex is able to successfully
+retrieve content and determine a repository type but fails to parse
+repository metadata. For example, a corrupt yum repository may cause this
+error to be raised.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="repo_autoindex.GeneratedIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">repo_autoindex.</span></span><span class="sig-name descname"><span class="pre">GeneratedIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#repo_autoindex.GeneratedIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single HTML index page generated by repo-autoindex.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="repo_autoindex.GeneratedIndex.content">
+<span class="sig-name descname"><span class="pre">content</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><a class="headerlink" href="#repo_autoindex.GeneratedIndex.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>The content of this index page (an HTML document).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="repo_autoindex.GeneratedIndex.relative_dir">
+<span class="sig-name descname"><span class="pre">relative_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.'</span></em><a class="headerlink" href="#repo_autoindex.GeneratedIndex.relative_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>The directory of this index page, relative to the root of the indexed
+repository.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="repo_autoindex.autoindex">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">repo_autoindex.</span></span><span class="sig-name descname"><span class="pre">autoindex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetcher</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Awaitable" title="(in Python v3.10)"><span class="pre">Awaitable</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_href_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.AsyncGenerator" title="(in Python v3.10)"><span class="pre">AsyncGenerator</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#repo_autoindex.GeneratedIndex" title="repo_autoindex._impl.base.GeneratedIndex"><span class="pre">GeneratedIndex</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#repo_autoindex.autoindex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate HTML indexes for a repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – Base URL of repository to be indexed. The function will probe this URL
+for all supported repository types.</p></li>
+<li><p><strong>fetcher</strong> – <p>An optional callable to customize the retrieval method for content in the
+repository. Can be omitted to use a basic HTTP(S) fetcher.</p>
+<p>A valid implementation must satisfy this contract:</p>
+<ul>
+<li><p>it will be called with the absolute URL of content which may or may not exist
+within the repository (e.g.
+“<a class="reference external" href="https://example.com/some-yum-repo/repodata/repomd.xml">https://example.com/some-yum-repo/repodata/repomd.xml</a>” when probing a yum
+repository)</p></li>
+<li><p>if the fetcher can determine, without error, that the requested content does not
+exist: it must return <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>if the fetcher can retrieve the requested content, it must return the entire
+content at the given URL as a <code class="docutils literal notranslate"><span class="pre">str</span></code>. This implies that, for example,
+decompressing a compressed file is the responsibility of the fetcher.</p></li>
+<li><p>if the fetcher encounters an exception, it may allow the exception to
+propagate.</p></li>
+</ul>
+</p></li>
+<li><p><strong>index_href_suffix</strong> – <p>Suffix added onto any links between one generated index and another.</p>
+<p>For example, if the caller intends to save each generated index page as
+autoindex.html, then <code class="docutils literal notranslate"><span class="pre">index_href_suffix=&quot;autoindex.html&quot;</span></code> should be passed
+so that any links between one index and another will use a correct URL.</p>
+<p>On the other hand, if the caller intends to save each generated index page
+as index.html and serve them via a web server which automatically serves
+files named index.html within each directory, the suffix can be left
+blank.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>An async generator producing zero or more instances of <a class="reference internal" href="#repo_autoindex.GeneratedIndex" title="repo_autoindex.GeneratedIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneratedIndex</span></code></a>.</p>
+<p>Zero indexes may be produced if the given URL doesn’t represent a repository
+of any supported type.</p>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#repo_autoindex.ContentError" title="repo_autoindex.ContentError"><strong>ContentError</strong></a> – Raised if indexed content appears to be invalid (for example, a yum repository
+    has invalid repodata).</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.10)"><strong>Exception</strong></a> – Any exception raised by <code class="docutils literal notranslate"><span class="pre">fetcher</span></code> will propagate (for example, I/O errors or
+    HTTP request failures).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Red Hat.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
