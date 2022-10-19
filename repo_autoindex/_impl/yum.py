@@ -1,13 +1,14 @@
 import datetime
 import logging
 import os
-from collections.abc import AsyncGenerator, Generator, Iterable
+from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Optional, Type, Any, TypeVar, NoReturn, overload
 from xml.dom.minidom import Element
 from xml.dom.pulldom import END_ELEMENT, START_ELEMENT
+from xml.sax.handler import ContentHandler
 
-from defusedxml import pulldom  # type: ignore
+from defusedxml import pulldom, sax  # type: ignore
 
 from .base import ICON_PACKAGE, Fetcher, GeneratedIndex, IndexEntry, Repo, ContentError
 from .template import TemplateContext
@@ -40,14 +41,6 @@ class Package:
     time: str
     size: int
 
-    @classmethod
-    def from_element(cls, elem: Element) -> "Package":
-        return cls(
-            href=get_tag(elem, "location").attributes["href"].value,
-            time=get_tag(elem, "time").attributes["file"].value,
-            size=get_tag(elem, "size").attributes["package"].value,
-        )
-
     @property
     def index_entry(self) -> IndexEntry:
         return IndexEntry(
@@ -79,6 +72,53 @@ def pulldom_elements(
         elif event == END_ELEMENT:
             LOG.debug("leaving element %s", current_path)
             current_path.pop()
+
+
+class PackagesParser(ContentHandler):
+    # SAX-integrated parser to load Package instances from a primary XML.
+    #
+    # We use this rather than pulldom because the pulldom memory usage while
+    # parsing a large primary XML seems unreasonably high.
+    #
+    def __init__(self) -> None:
+        self.current_path: list[str] = []
+        self.current_package: Optional[Package] = None
+        self.packages: list[Package] = []
+
+    def parse(self, xmlstr: str) -> Iterable[Package]:
+        self.packages = []
+
+        # Parse the XML document; this will invoke our start/end element handlers
+        # which in turn will populate self.packages
+        sax.parseString(xmlstr.encode("utf-8"), self)
+
+        return self.packages
+
+    def startElement(self, name: str, attrs: Mapping[str, Any]):
+        self.current_path.append(name)
+        LOG.debug("entering element %s", self.current_path)
+
+        if self.current_path == ["metadata", "package"] and attrs.get("type") == "rpm":
+            self.current_package = Package("<unknown package>", "", 0)
+        elif self.current_path == ["metadata", "package", "location"]:
+            assert self.current_package
+            self.current_package.href = attrs["href"]
+        elif self.current_path == ["metadata", "package", "time"]:
+            assert self.current_package
+            self.current_package.time = attrs["file"]
+        elif self.current_path == ["metadata", "package", "size"]:
+            assert self.current_package
+            self.current_package.size = attrs["package"]
+
+    def endElement(self, _name: str):
+        LOG.debug("leaving element %s", self.current_path)
+
+        if self.current_path == ["metadata", "package"]:
+            assert self.current_package
+            self.packages.append(self.current_package)
+            self.current_package = None
+
+        self.current_path.pop()
 
 
 class YumRepo(Repo):
@@ -175,21 +215,9 @@ class YumRepo(Repo):
             key=lambda e: e.text,
         )
 
-    def __packages_from_primary(self, primary_xml: str) -> list[Package]:
+    def __packages_from_primary(self, primary_xml: str) -> Iterable[Package]:
         LOG.debug("primary xml: %s", primary_xml)
-
-        out = []
-        for elem in pulldom_elements(
-            primary_xml,
-            path_matcher=lambda p: p == ["metadata", "package"],
-            attr_matcher=lambda attrs: attrs.get("type")
-            and attrs["type"].value == "rpm",
-        ):
-            pkg = Package.from_element(elem)
-            if pkg:
-                out.append(pkg)
-
-        return out
+        return PackagesParser().parse(primary_xml)
 
     def __render_entries(
         self,
