@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.0.2 - 2022-10-21
+
+- Reduced memory usage when handling large yum repositories.
+
 ### v1.0.1 - 2022-08-15
 
 - Use correct SPDX license identifier in package metadata.
