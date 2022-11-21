@@ -28,6 +28,7 @@ sphinx-argparse = "^0.3.1"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.4"
+safety = "^2.3.1"
 
 [tool.isort]
 profile = "black"
