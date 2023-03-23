@@ -128,13 +128,13 @@ class YumRepo(Repo):
         LOG.debug("repomd.xml: %s", self.entry_point_content)
 
         entries = []
-        entries.extend(await self.__repodata_entries())
-        entries.extend(await self.__package_entries())
+        entries.extend(await self._repodata_entries())
+        entries.extend(await self._package_entries())
 
         for page in self.__render_entries(entries, index_href_suffix):
             yield page
 
-    async def __repodata_entries(self) -> list[IndexEntry]:
+    async def _repodata_entries(self) -> list[IndexEntry]:
         out = []
 
         # There's always an entry for repomd.xml itself...
@@ -189,7 +189,7 @@ class YumRepo(Repo):
 
         return out
 
-    async def __package_entries(self) -> list[IndexEntry]:
+    async def _package_entries(self) -> list[IndexEntry]:
 
         primary_nodes = list(
             pulldom_elements(
