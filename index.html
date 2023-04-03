@@ -51,6 +51,7 @@ It supports:</p>
 <ul class="simple">
 <li><p>yum repositories (<code class="docutils literal notranslate"><span class="pre">repodata/repomd.xml</span></code>)</p></li>
 <li><p>pulp file repositories (<code class="docutils literal notranslate"><span class="pre">PULP_MANIFEST</span></code>)</p></li>
+<li><p>kickstart tree repositories* (<code class="docutils literal notranslate"><span class="pre">treeinfo</span></code>, <code class="docutils literal notranslate"><span class="pre">repodata/repomd.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_files.json</span></code>)</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">repo-autoindex</span></code> provides similar functionality to traditional server-generated
 directory indexes such as httpd’s
@@ -62,6 +63,11 @@ in repository metadata, rather than all content within a directory.</p></li>
 <li><p>The method of obtaining the content for indexing can be customized, allowing the
 library to integrate with exotic scenarios such as repositories generated on demand
 or not stored within a traditional filesystem.</p></li>
+</ul>
+<p>* <code class="docutils literal notranslate"><span class="pre">repo-autoindex</span></code> supports kickstart tree repositories satisfying certain conditions:</p>
+<ul class="simple">
+<li><p>The kickstart repo contains exactly one yum repo</p></li>
+<li><p>The yum repo is located in the root of the kickstart tree repo, at exactly <code class="docutils literal notranslate"><span class="pre">.</span></code></p></li>
 </ul>
 </section>
 <section id="reference-cli">
@@ -234,7 +240,7 @@ of any supported type.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/index.rst.txt"
