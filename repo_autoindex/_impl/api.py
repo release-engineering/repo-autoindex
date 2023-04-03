@@ -8,9 +8,10 @@ import aiohttp
 from .base import Fetcher, GeneratedIndex, Repo, ContentError, FetcherError
 from .yum import YumRepo
 from .pulp import PulpFileRepo
+from .kickstart import KickstartRepo
 
 LOG = logging.getLogger("repo-autoindex")
-REPO_TYPES: list[Type[Repo]] = [YumRepo, PulpFileRepo]
+REPO_TYPES: list[Type[Repo]] = [KickstartRepo, YumRepo, PulpFileRepo]
 
 
 def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
@@ -133,6 +134,7 @@ async def autoindex(
                     index_href_suffix=index_href_suffix
                 ):
                     yield page
+                break
     except FetcherError as exc:
         # FetcherErrors are unwrapped to propagate whatever was the original error
         assert exc.__cause__

@@ -16,6 +16,7 @@ It supports:
 
 - yum repositories (``repodata/repomd.xml``)
 - pulp file repositories (``PULP_MANIFEST``)
+- kickstart tree repositories\* (``treeinfo``, ``repodata/repomd.xml``, ``extra_files.json``)
 
 ``repo-autoindex`` provides similar functionality to traditional server-generated
 directory indexes such as httpd's
@@ -28,6 +29,10 @@ a few key differences:
   library to integrate with exotic scenarios such as repositories generated on demand
   or not stored within a traditional filesystem.
 
+\* ``repo-autoindex`` supports kickstart tree repositories satisfying certain conditions:
+
+- The kickstart repo contains exactly one yum repo
+- The yum repo is located in the root of the kickstart tree repo, at exactly ``.``
 
 Reference: CLI
 --------------
