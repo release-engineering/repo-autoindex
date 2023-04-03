@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.1.0 - 2023-04-04
+
+- Added limited support for kickstart repositories.
+
 ### v1.0.2 - 2022-10-21
 
 - Reduced memory usage when handling large yum repositories.
