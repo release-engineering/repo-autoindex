@@ -132,15 +132,15 @@ class KickstartRepo(YumRepo):
 
         treeinfo = configparser.ConfigParser()
         treeinfo.read_string(self.treeinfo_content)
-
-        for image in treeinfo["checksums"]:
-            entry = IndexEntry(
-                href=image,
-                text=os.path.basename(image),
-            )
-            if entry.href.endswith(".iso") or entry.href.endswith(".img"):
-                entry.icon = ICON_OPTICAL
-            out.append(entry)
+        if "checksums" in treeinfo:
+            for image in treeinfo["checksums"]:
+                entry = IndexEntry(
+                    href=image,
+                    text=os.path.basename(image),
+                )
+                if entry.href.endswith(".iso") or entry.href.endswith(".img"):
+                    entry.icon = ICON_OPTICAL
+                out.append(entry)
         return out
 
     async def _extra_files_entries(self) -> list[IndexEntry]:
