@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.1.1 - 2023-04-12
+
+- Fix handling of kickstart repositories with no checksums in treeinfo.
+
 ### v1.1.0 - 2023-04-04
 
 - Added limited support for kickstart repositories.
