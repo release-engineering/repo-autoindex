@@ -445,6 +445,43 @@ repository = .
 type = variant
 uid = BaseOS"""
 
+TREEINFO_APPSTREAM="""[general]
+; WARNING.0 = This section provides compatibility with pre-productmd treeinfos.
+; WARNING.1 = Read productmd documentation for details about new format.
+arch = x86_64
+family = Red Hat Enterprise Linux
+name = Red Hat Enterprise Linux 8.3
+packagedir = Packages
+platforms = x86_64
+repository = .
+timestamp = 1601410486
+variant = AppStream
+variants = AppStream
+version = 8.3
+
+[header]
+type = productmd.treeinfo
+version = 1.2
+
+[release]
+name = Red Hat Enterprise Linux
+short = RHEL
+version = 8.3
+
+[tree]
+arch = x86_64
+build_timestamp = 1601410486
+platforms = x86_64
+variants = AppStream
+
+[variant-AppStream]
+id = AppStream
+name = AppStream
+packages = Packages
+repository = .
+type = variant
+uid = AppStream"""
+
 EXTRA_FILES_JSON = """{
     "data": [
         {
@@ -574,3 +611,70 @@ async def test_typical_index():
     assert '<a href="install.img">' in by_relative_dir["images"].content
 
     assert '<a href="vmlinuz">' in by_relative_dir["images/pxeboot"].content
+
+
+async def test_typical_appstream_index():
+    fetcher = StaticFetcher()
+
+    fetcher.content["https://example.com/repodata/repomd.xml"] = REPOMD_XML
+    fetcher.content[
+        "https://example.com/repodata/d4888f04f95ac067af4d997d35c6d345cbe398563d777d017a3634c9ed6148cf-primary.xml.gz"
+    ] = PRIMARY_XML
+    fetcher.content["https://example.com/treeinfo"] = TREEINFO_APPSTREAM
+    fetcher.content["https://example.com/extra_files.json"] = EXTRA_FILES_JSON
+
+    entries: list[GeneratedIndex] = []
+    async for entry in autoindex("https://example.com", fetcher=fetcher):
+        print(f"Found one entry: {entry.relative_dir}")
+        entries.append(entry)
+
+    # It should generate some entries
+    assert entries
+
+    entries.sort(key=lambda e: e.relative_dir)
+
+    # First check that the directory structure was reproduced.
+    assert [e.relative_dir for e in entries] == [
+        "",
+        "packages",
+        "packages/w",
+        "packages/x",
+        "repodata",
+    ]
+
+    by_relative_dir: dict[str, GeneratedIndex] = {}
+    for entry in entries:
+        by_relative_dir[entry.relative_dir] = entry
+
+    # Sanity check a few links expected to appear in each.
+    assert '<a href="repodata/">' in by_relative_dir[""].content
+    assert '<a href="packages/">' in by_relative_dir[""].content
+
+    assert '<a href="w/">' in by_relative_dir["packages"].content
+    assert '<a href="x/">' in by_relative_dir["packages"].content
+
+    assert (
+        '<a href="284769ec79daa9e0a3b0129bb6260cc6271c90c4fe02b43dfa7cdf7635fb803f-filelists.xml.gz">'
+        in by_relative_dir["repodata"].content
+    )
+
+    assert (
+        '<a href="wireplumber-libs-0.4.10-1.fc36.x86_64.rpm">'
+        in by_relative_dir["packages/w"].content
+    )
+    assert (
+        '<a href="xfce4-terminal-1.0.3-1.fc36.x86_64.rpm">'
+        in by_relative_dir["packages/x"].content
+    )
+
+    assert '<a href="treeinfo">' in by_relative_dir[""].content
+
+    assert '<a href="extra_files.json">' in by_relative_dir[""].content
+
+    assert '<a href="EULA">' in by_relative_dir[""].content
+
+    assert '<a href="GPL">' in by_relative_dir[""].content
+
+    assert '<a href="RPM-GPG-KEY-redhat-beta">' in by_relative_dir[""].content
+
+    assert '<a href="RPM-GPG-KEY-redhat-release">' in by_relative_dir[""].content
