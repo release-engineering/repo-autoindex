@@ -23,7 +23,7 @@ def assert_repodata_ok(condition: Any, msg: str):
 
 
 def get_tag(elem: Element, name: str) -> Element:
-    elems: list[Element] = elem.getElementsByTagName(name)  # type: ignore
+    elems: list[Element] = elem.getElementsByTagName(name)
     assert_repodata_ok(len(elems) == 1, f"expected exactly one {name} tag")
     return elems[0]
 
