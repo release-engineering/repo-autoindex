@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.1.2 - 2023-09-18
+
+- Add `py.typed` to make package PEP 561 compliant / enable downstream type-checking.
+
 ### v1.1.1 - 2023-04-12
 
 - Fix handling of kickstart repositories with no checksums in treeinfo.
