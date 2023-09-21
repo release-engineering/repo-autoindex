@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, BinaryIO, Union
 
 T = TypeVar("T")
 
-Fetcher = Callable[[str], Awaitable[Optional[str]]]
+Fetcher = Callable[[str], Awaitable[Optional[Union[str, BinaryIO]]]]
+
+# Like public Fetcher type above but does not allow 'str' outputs.
+IOFetcher = Callable[[str], Awaitable[Optional[BinaryIO]]]
 
 
 ICON_FOLDER = "📂"
@@ -59,7 +62,7 @@ class Repo(ABC):
         self,
         base_url: str,
         entry_point_content: str,
-        fetcher: Fetcher,
+        fetcher: IOFetcher,
     ):
         self.base_url = base_url
         self.entry_point_content = entry_point_content
@@ -73,7 +76,7 @@ class Repo(ABC):
 
     @classmethod
     @abstractmethod
-    async def probe(cls: Type[T], fetcher: Fetcher, url: str) -> Optional[T]:
+    async def probe(cls: Type[T], fetcher: IOFetcher, url: str) -> Optional[T]:
         """Determine if a specified URL seems to point at a repository of this type.
 
         If so, returns an initialized Repo of a concrete subtype. If not, returns None.

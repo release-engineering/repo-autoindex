@@ -7,6 +7,17 @@ from repo_autoindex._impl.api import http_fetcher
 class FakeReader:
     def __init__(self, body: bytes):
         self.body = body
+        self.iterating = False
+
+    def __aiter__(self):
+        self.iterating = True
+        return self
+
+    async def __anext__(self):
+        if not self.iterating:
+            raise StopAsyncIteration
+        self.iterating = False
+        return self.body
 
     async def read(self):
         return self.body
@@ -53,4 +64,4 @@ async def test_http_fetcher_decompresses(content_type: str):
     fetcher = http_fetcher(session)
 
     response = await fetcher("/some/path.gz")
-    assert response == text
+    assert response.read().decode() == text

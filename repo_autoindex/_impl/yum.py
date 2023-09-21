@@ -3,14 +3,21 @@ import logging
 import os
 from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Optional, Type, Any, TypeVar, NoReturn, overload
+from typing import BinaryIO, Optional, Type, Any
 from xml.dom.minidom import Element
 from xml.dom.pulldom import END_ELEMENT, START_ELEMENT
 from xml.sax.handler import ContentHandler
 
 from defusedxml import pulldom, sax  # type: ignore
 
-from .base import ICON_PACKAGE, Fetcher, GeneratedIndex, IndexEntry, Repo, ContentError
+from .base import (
+    ICON_PACKAGE,
+    GeneratedIndex,
+    IOFetcher,
+    IndexEntry,
+    Repo,
+    ContentError,
+)
 from .template import TemplateContext
 from .tree import treeify
 
@@ -85,12 +92,12 @@ class PackagesParser(ContentHandler):
         self.current_package: Optional[Package] = None
         self.packages: list[Package] = []
 
-    def parse(self, xmlstr: str) -> Iterable[Package]:
+    def parse(self, xml: BinaryIO) -> Iterable[Package]:
         self.packages = []
 
         # Parse the XML document; this will invoke our start/end element handlers
         # which in turn will populate self.packages
-        sax.parseString(xmlstr.encode("utf-8"), self)
+        sax.parse(xml, self)
 
         return self.packages
 
@@ -190,7 +197,6 @@ class YumRepo(Repo):
         return out
 
     async def _package_entries(self) -> list[IndexEntry]:
-
         primary_nodes = list(
             pulldom_elements(
                 self.entry_point_content,
@@ -215,8 +221,7 @@ class YumRepo(Repo):
             key=lambda e: e.text,
         )
 
-    def __packages_from_primary(self, primary_xml: str) -> Iterable[Package]:
-        LOG.debug("primary xml: %s", primary_xml)
+    def __packages_from_primary(self, primary_xml: BinaryIO) -> Iterable[Package]:
         return PackagesParser().parse(primary_xml)
 
     def __render_entries(
@@ -237,7 +242,7 @@ class YumRepo(Repo):
     @classmethod
     async def probe(
         cls: Type["YumRepo"],
-        fetcher: Fetcher,
+        fetcher: IOFetcher,
         url: str,
     ) -> Optional["YumRepo"]:
         repomd_xml_url = f"{url}/repodata/repomd.xml"
@@ -248,4 +253,4 @@ class YumRepo(Repo):
             return None
 
         # it is a yum repo
-        return cls(url, repomd_xml, fetcher)
+        return cls(url, repomd_xml.read().decode(), fetcher)

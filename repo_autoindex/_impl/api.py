@@ -1,11 +1,14 @@
 import gzip
 import logging
-from collections.abc import AsyncGenerator
-from typing import Optional, Type
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import Optional, Type, BinaryIO
+import tempfile
+import io
 
 import aiohttp
 
-from .base import Fetcher, GeneratedIndex, Repo, ContentError, FetcherError
+
+from .base import Fetcher, IOFetcher, GeneratedIndex, Repo, ContentError, FetcherError
 from .yum import YumRepo
 from .pulp import PulpFileRepo
 from .kickstart import KickstartRepo
@@ -15,7 +18,9 @@ REPO_TYPES: list[Type[Repo]] = [KickstartRepo, YumRepo, PulpFileRepo]
 
 
 def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
-    async def get_content_with_session(url: str) -> Optional[str]:
+    async def get_content_with_session(
+        url: str,
+    ) -> Optional[BinaryIO]:
         LOG.info("Fetching: %s", url)
         async with session.get(url) as resp:
             if resp.status == 404:
@@ -26,26 +31,39 @@ def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
             # Any other error status is fatal
             resp.raise_for_status()
 
+            out: BinaryIO = tempfile.NamedTemporaryFile(prefix="repo-autoindex")  # type: ignore
+            async for chunk in resp.content:
+                out.write(chunk)
+            out.flush()
+            out.seek(0)
+
             # Deal with the non-ideal content negotiation
             # for certain storage backends.
             if url.endswith(".gz") and resp.content_type in (
                 "application/x-gzip",
                 "application/octet-stream",
             ):
-                compressed = await resp.content.read()
-                uncomp = gzip.decompress(compressed)
-                return uncomp.decode("utf-8")
+                out = gzip.GzipFile(fileobj=out)  # type: ignore
 
-            return await resp.text()
+            return out
 
     return get_content_with_session
 
 
-def with_error_handling(fetcher: Fetcher) -> Fetcher:
-    # wraps a fetcher such that any raised exceptions are wrapped into FetcherError
-    async def new_fetcher(url: str) -> Optional[str]:
+def wrapped_fetcher(fetcher: Fetcher) -> IOFetcher:
+    # wraps a fetcher as passed in by the caller into an internal
+    # fetcher enforcing certain behaviors:
+    #
+    # - wraps all exceptions in FetcherError
+    #
+    # - adapts 'str' outputs into io streams
+    #
+    async def new_fetcher(url: str) -> Optional[BinaryIO]:
         try:
-            return await fetcher(url)
+            out = await fetcher(url)
+            if isinstance(out, str):
+                out = io.BytesIO(out.encode())
+            return out
         except Exception as exc:
             raise FetcherError from exc
 
@@ -79,9 +97,15 @@ async def autoindex(
             - if the fetcher can determine, without error, that the requested content does not
               exist: it must return ``None``.
 
-            - if the fetcher can retrieve the requested content, it must return the entire
-              content at the given URL as a ``str``. This implies that, for example,
-              decompressing a compressed file is the responsibility of the fetcher.
+            - if the fetcher can retrieve the requested content, it must return the
+              content at the given URL as a file-like object.
+
+              Returning a ``str`` is also possible, but not recommended since it
+              requires loading an entire file into memory at once, and some
+              repositories contain very large files.
+
+              Note that decompressing compressed files (such as bzipped XML in
+              yum repositories) is the responsibility of the fetcher.
 
             - if the fetcher encounters an exception, it may allow the exception to
               propagate.
@@ -124,7 +148,7 @@ async def autoindex(
     while url.endswith("/"):
         url = url[:-1]
 
-    fetcher = with_error_handling(fetcher)
+    fetcher = wrapped_fetcher(fetcher)
 
     try:
         for repo_type in REPO_TYPES:
