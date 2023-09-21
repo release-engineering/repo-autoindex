@@ -1,4 +1,5 @@
-from typing import Optional
+import io
+from typing import BinaryIO, Optional
 import textwrap
 
 from repo_autoindex import autoindex
@@ -445,7 +446,7 @@ repository = .
 type = variant
 uid = BaseOS"""
 
-TREEINFO_APPSTREAM="""[general]
+TREEINFO_APPSTREAM = """[general]
 ; WARNING.0 = This section provides compatibility with pre-productmd treeinfos.
 ; WARNING.1 = Read productmd documentation for details about new format.
 arch = x86_64
@@ -531,8 +532,14 @@ class StaticFetcher:
     def __init__(self):
         self.content: dict[str, str] = {}
 
-    async def __call__(self, url: str) -> Optional[str]:
-        return self.content.get(url)
+    async def __call__(self, url: str) -> Optional[BinaryIO]:
+        out = self.content.get(url)
+        if out is not None:
+            # Since fetchers are allowed to return either str or an io stream,
+            # this test wraps the canned strings into a stream (while some other
+            # tests do not) to ensure both cases are covered.
+            out = io.BytesIO(out.encode())
+        return out
 
 
 async def test_typical_index():

@@ -2,7 +2,14 @@ from typing import Optional, Type
 from collections.abc import AsyncGenerator
 import logging
 
-from .base import Repo, GeneratedIndex, Fetcher, IndexEntry, ICON_OPTICAL, ICON_QCOW
+from .base import (
+    IOFetcher,
+    Repo,
+    GeneratedIndex,
+    IndexEntry,
+    ICON_OPTICAL,
+    ICON_QCOW,
+)
 from .template import TemplateContext
 from .tree import treeify
 
@@ -53,7 +60,7 @@ class PulpFileRepo(Repo):
 
     @classmethod
     async def probe(
-        cls: Type["PulpFileRepo"], fetcher: Fetcher, url: str
+        cls: Type["PulpFileRepo"], fetcher: IOFetcher, url: str
     ) -> Optional["PulpFileRepo"]:
         manifest_url = f"{url}/PULP_MANIFEST"
         manifest_content = await fetcher(manifest_url)
@@ -61,4 +68,4 @@ class PulpFileRepo(Repo):
         if manifest_content is None:
             return None
 
-        return cls(url, manifest_content, fetcher)
+        return cls(url, manifest_content.read().decode(), fetcher)

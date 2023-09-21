@@ -5,7 +5,7 @@ import configparser
 import json
 import os
 
-from .base import Repo, GeneratedIndex, Fetcher, IndexEntry, ICON_OPTICAL, ICON_QCOW
+from .base import GeneratedIndex, IOFetcher, IndexEntry, ICON_OPTICAL
 from .template import TemplateContext
 from .tree import treeify
 from .yum import YumRepo
@@ -20,7 +20,7 @@ class KickstartRepo(YumRepo):
         repomd_xml: str,
         extra_files: str,
         treeinfo: str,
-        fetcher: Fetcher,
+        fetcher: IOFetcher,
     ):
         super().__init__(base_url, repomd_xml, fetcher)
         self.base_url = base_url
@@ -211,12 +211,12 @@ class KickstartRepo(YumRepo):
 
     @classmethod
     async def probe(
-        cls: Type["KickstartRepo"], fetcher: Fetcher, url: str
+        cls: Type["KickstartRepo"], fetcher: IOFetcher, url: str
     ) -> Optional["KickstartRepo"]:
         treeinfo_url = f"{url}/treeinfo"
         treeinfo_content = await fetcher(treeinfo_url)
         extra_files_url = f"{url}/extra_files.json"
-        extra_files_content = await fetcher(extra_files_url) or ""
+        extra_files_content = await fetcher(extra_files_url)
         repomd_xml_url = f"{url}/repodata/repomd.xml"
         repomd_xml = await fetcher(repomd_xml_url)
 
@@ -232,4 +232,10 @@ class KickstartRepo(YumRepo):
         if treeinfo_content is None or repomd_xml is None:
             return None
 
-        return cls(url, repomd_xml, extra_files_content, treeinfo_content, fetcher)
+        return cls(
+            url,
+            repomd_xml.read().decode(),
+            extra_files_content.read().decode() if extra_files_content else "",
+            treeinfo_content.read().decode(),
+            fetcher,
+        )

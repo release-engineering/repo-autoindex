@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "repo-autoindex"
-version = "1.1.2"
+version = "1.2.0"
 description = "Generic static HTML indexes of various repository types"
 authors = ["Rohan McGovern <rmcgover@redhat.com>"]
 license = "GPL-3.0-or-later"

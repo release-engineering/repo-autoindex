@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.2.0 - 2023-09-22
+
+- Support streamed fetching to reduce memory usage when fetching large files.
+
 ### v1.1.2 - 2023-09-18
 
 - Add `py.typed` to make package PEP 561 compliant / enable downstream type-checking.
