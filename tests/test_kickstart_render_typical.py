@@ -1,4 +1,5 @@
 import io
+import re
 from typing import BinaryIO, Optional
 import textwrap
 
@@ -618,6 +619,30 @@ async def test_typical_index():
     assert '<a href="install.img">' in by_relative_dir["images"].content
 
     assert '<a href="vmlinuz">' in by_relative_dir["images/pxeboot"].content
+
+    # Sample the order of entries in some of the listings.
+    # Directories are expected to come first.
+    links = re.findall(r'<a href="([^"]+)"', by_relative_dir[""].content)
+    assert links == [
+        "images/",
+        "packages/",
+        "repodata/",
+        "EULA",
+        "GPL",
+        "RPM-GPG-KEY-redhat-beta",
+        "RPM-GPG-KEY-redhat-release",
+        "extra_files.json",
+        "treeinfo",
+    ]
+
+    links = re.findall(r'<a href="([^"]+)"', by_relative_dir["images"].content)
+    assert links == [
+        "../",
+        "pxeboot/",
+        "boot.iso",
+        "efiboot.img",
+        "install.img",
+    ]
 
 
 async def test_typical_appstream_index():

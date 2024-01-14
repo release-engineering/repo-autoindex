@@ -56,6 +56,23 @@ class IndexEntry:
     padding: str = ""
     icon: str = ICON_OTHER
 
+    @property
+    def sort_key(self):
+        # Returns a suggested sort key for displaying entries in
+        # a UI.
+
+        priority = 0
+
+        # Folders should come first
+        if self.href.endswith("/"):
+            priority -= 1
+            # And special folders like ".." even earlier
+            if self.href.startswith("."):
+                priority -= 1
+
+        # Entries sort by the priority we calculated, and then by name
+        return (priority, self.href)
+
 
 class Repo(ABC):
     def __init__(

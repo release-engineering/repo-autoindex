@@ -101,7 +101,7 @@ class PackagesParser(ContentHandler):
 
         return self.packages
 
-    def startElement(self, name: str, attrs: Mapping[str, Any]):
+    def startElement(self, name: str, attrs: Mapping[str, Any]):  # type: ignore
         self.current_path.append(name)
         LOG.debug("entering element %s", self.current_path)
 
