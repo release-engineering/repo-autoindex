@@ -24,6 +24,10 @@ information about the usage of `repo-autoindex`.
 
 ## Changelog
 
+### v1.2.1 - 2024-01-15
+
+- Ensure directories always appear first in indexes.
+
 ### v1.2.0 - 2023-09-22
 
 - Support streamed fetching to reduce memory usage when fetching large files.

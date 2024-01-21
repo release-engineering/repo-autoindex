@@ -70,4 +70,6 @@ def treeify(
                 ]
             )
 
+    out.entries.sort(key=lambda entry: entry.sort_key)
+
     return out
