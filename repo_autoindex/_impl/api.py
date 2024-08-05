@@ -40,6 +40,7 @@ def http_fetcher(session: aiohttp.ClientSession) -> Fetcher:
             # Deal with the non-ideal content negotiation
             # for certain storage backends.
             if url.endswith(".gz") and resp.content_type in (
+                "application/gzip",
                 "application/x-gzip",
                 "application/octet-stream",
             ):
